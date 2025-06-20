@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %} {# Indique que ce template hérite du layout de base #}
+
+{% block title %}Modifier le voyage : {{ travel.name }}{% endblock %} {# Définit le titre de la page #}
+
+{% block body %} {# Démarre le bloc principal du contenu #}
+<div class="container mt-4"> {# Utilise une classe Bootstrap pour le conteneur #}
+
+    <h1>Modifier le voyage : {{ travel.name }}</h1> {# Titre principal de la page #}
+
+    {# Assure-toi d'avoir data-turbo="false" pour éviter l'erreur Turbo si le formulaire est invalide #}
+    {# Le formulaire est lié à l'objet $travel existant, donc il sera pré-rempli #}
+    {{ form_start(travelForm, {'attr': {'data-turbo': 'false'}}) }}
+
+        {# Affiche tous les champs du formulaire #}
+        {{ form_widget(travelForm) }}
+
+        {# Ajoute un bouton d'envoi manuel #}
+        <button type="submit" class="btn btn-primary mt-3">Enregistrer les modifications</button>
+
+    {{ form_end(travelForm) }}
+
+    {# Liens pour retourner #}
+    <div class="mt-3">
+        <p><a href="{{ path('app_travel_show', {'id': travel.id}) }}">Annuler et revenir aux détails</a></p>
+        <p><a href="{{ path('app_travel_index') }}">Retour à la liste des voyages</a></p>
+    </div>
+
+
+</div>
+{% endblock %} {# Termine le bloc principal du contenu #}
