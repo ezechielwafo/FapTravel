@@ -6,10 +6,13 @@ use App\Entity\Travel;
 use App\Form\TravelType;
 use App\Repository\TravelRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use SebastianBergmann\Environment\Console;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse; 
+use Symfony\Component\Serializer\SerializerInterface;
 
 class TravelController extends AbstractController
 {
@@ -52,7 +55,7 @@ class TravelController extends AbstractController
         ]);
     }
 
-    #[Route('/travel/{id}/edit', name: 'app_travel_edit')] // <-- AJOUTE CETTE ACTION
+    #[Route('/travel/{id}/edit', name: 'app_travel_edit')] 
     public function edit(Request $request, Travel $travel, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(TravelType::class, $travel);
@@ -86,5 +89,19 @@ class TravelController extends AbstractController
         }
 
         return $this->redirectToRoute('app_travel_index');
+    }
+    #[Route('/api/travels', name: 'api_travel_index', methods: ['GET'])] // <-- Nouvelle route pour l'API
+    public function apiIndex(TravelRepository $travelRepository, SerializerInterface $serializer): JsonResponse // <-- Nouvelle action
+    {
+        // 1. Récupérer les données des voyages
+        $travels = $travelRepository->findAll();
+
+        // 2. Sérialiser les données en JSON
+        // Le SerializerInterface est un service Symfony qui permet de convertir des objets PHP en différents formats (JSON, XML, etc.)
+        // Le groupe 'travel:read' est une bonne pratique pour contrôler quels champs sont inclus dans la sortie JSON.
+        // Nous définirons ce groupe plus tard dans l'entité Travel.
+        $jsonTravels = $serializer->serialize($travels, 'json', ['groups' => 'travel:read']);
+        // 3. Retourner une réponse JSON
+        return new JsonResponse($jsonTravels, Response::HTTP_OK, [], true); // Le dernier argument 'true' indique que le contenu est déjà JSON
     }
 }

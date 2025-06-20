@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\TravelRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: TravelRepository::class)]
 class Travel
@@ -12,24 +13,31 @@ class Travel
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups('travel:read')]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups('travel:read')]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups('travel:read')]
     private ?string $description = null;
 
     #[ORM\Column]
+    #[Groups('travel:read')]
     private ?\DateTime $startDate = null;
 
     #[ORM\Column]
+    #[Groups('travel:read')]
     private ?\DateTime $endDate = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('travel:read')]
     private ?string $price = null;
 
     #[ORM\Column]
+    #[Groups('travel:read')]
     private ?\DateTimeImmutable $createdAt = null;
 
     public function __construct()
