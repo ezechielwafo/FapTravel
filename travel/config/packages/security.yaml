@@ -25,6 +25,7 @@ security:
             form_login:
                 login_path: app_login # <--- Le nom de la route de ton contrôleur de login
                 check_path: app_login # <--- L'URL où le formulaire de login est soumis
+                default_target_path: /dashboard
                 enable_csrf: true
                 # default_target_path: app_dashboard # Optionnel: où rediriger après un login réussi
                 # target_path_parameter: _target_path
@@ -45,6 +46,7 @@ security:
     access_control:
         # Décommenter et configurer les règles d'accès
         - { path: ^/admin, roles: ROLE_ADMIN } # Protège toutes les URLs commençant par /admin
+        - { path: ^/dashboard, roles: IS_AUTHENTICATED_FULLY }
         # - { path: ^/profile, roles: ROLE_USER }
         # - { path: ^/, roles: PUBLIC_ACCESS } # Permet l'accès public par défaut si tu as d'autres règles plus spécifiques
 
