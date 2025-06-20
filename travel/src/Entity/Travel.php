@@ -6,6 +6,7 @@ use App\Repository\TravelRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert; 
 
 #[ORM\Entity(repositoryClass: TravelRepository::class)]
 class Travel
@@ -13,31 +14,35 @@ class Travel
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups('travel:read')]
+    #[Groups(['travel:read', 'travel:write'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups('travel:read')]
+    #[Groups(['travel:read', 'travel:write'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups('travel:read')]
+    #[Groups(['travel:read', 'travel:write'])]
     private ?string $description = null;
 
     #[ORM\Column]
-    #[Groups('travel:read')]
+    #[Groups(['travel:read', 'travel:write'])]
+    #[Assert\Type(\DateTimeInterface::class)]
     private ?\DateTime $startDate = null;
 
     #[ORM\Column]
-    #[Groups('travel:read')]
+    #[Groups(['travel:read', 'travel:write'])]
+    #[Assert\Type(\DateTimeInterface::class)] // <-- Exemple de contrainte
+    #[Assert\GreaterThanOrEqual(propertyPath: 'startDate', message: 'The end date must be greater than or equal to the start date.')]
     private ?\DateTime $endDate = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups('travel:read')]
+    #[Groups(['travel:read', 'travel:write'])]
     private ?string $price = null;
 
     #[ORM\Column]
-    #[Groups('travel:read')]
+    #[Groups(['travel:read', 'travel:write'])]
+    #[Assert\PositiveOrZero]
     private ?\DateTimeImmutable $createdAt = null;
 
     public function __construct()

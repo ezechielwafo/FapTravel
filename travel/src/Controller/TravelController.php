@@ -6,16 +6,18 @@ use App\Entity\Travel;
 use App\Form\TravelType;
 use App\Repository\TravelRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use SebastianBergmann\Environment\Console;
+// use SebastianBergmann\Environment\Console; // <-- Supprime cette ligne
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\JsonResponse; 
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface; // <-- Ajoute cette ligne
 
 class TravelController extends AbstractController
 {
+    // Actions pour l'interface web Twig (CRUD classique)
     #[Route('/travel', name: 'app_travel_index')]
     public function index(TravelRepository $travelRepository): Response
     {
@@ -55,7 +57,7 @@ class TravelController extends AbstractController
         ]);
     }
 
-    #[Route('/travel/{id}/edit', name: 'app_travel_edit')] 
+    #[Route('/travel/{id}/edit', name: 'app_travel_edit')]
     public function edit(Request $request, Travel $travel, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(TravelType::class, $travel);
@@ -90,18 +92,92 @@ class TravelController extends AbstractController
 
         return $this->redirectToRoute('app_travel_index');
     }
-    #[Route('/api/travels', name: 'api_travel_index', methods: ['GET'])] // <-- Nouvelle route pour l'API
-    public function apiIndex(TravelRepository $travelRepository, SerializerInterface $serializer): JsonResponse // <-- Nouvelle action
+
+    // Actions pour l'API REST
+
+    #[Route('/api/travels', name: 'api_travel_index', methods: ['GET'])] // <-- Route corrigée (pas de {id})
+    public function apiIndex(TravelRepository $travelRepository, SerializerInterface $serializer): JsonResponse
     {
-        // 1. Récupérer les données des voyages
         $travels = $travelRepository->findAll();
 
-        // 2. Sérialiser les données en JSON
-        // Le SerializerInterface est un service Symfony qui permet de convertir des objets PHP en différents formats (JSON, XML, etc.)
-        // Le groupe 'travel:read' est une bonne pratique pour contrôler quels champs sont inclus dans la sortie JSON.
-        // Nous définirons ce groupe plus tard dans l'entité Travel.
         $jsonTravels = $serializer->serialize($travels, 'json', ['groups' => 'travel:read']);
-        // 3. Retourner une réponse JSON
-        return new JsonResponse($jsonTravels, Response::HTTP_OK, [], true); // Le dernier argument 'true' indique que le contenu est déjà JSON
+        return new JsonResponse($jsonTravels, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/api/travels/{id}', name: 'api_travel_show', methods: ['GET'])] // <-- Nouvelle action pour afficher un voyage spécifique par ID
+    public function apiShow(Travel $travel, SerializerInterface $serializer): JsonResponse
+    {
+        $jsonTravel = $serializer->serialize($travel, 'json', ['groups' => 'travel:read']);
+        return new JsonResponse($jsonTravel, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/api/travels', name: 'api_travel_new', methods: ['POST'])] // <-- Route pour la création (pas de {id})
+    public function apiNew(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
+    {
+        $jsonRecu = $request->getContent();
+
+        try {
+            $travel = $serializer->deserialize($jsonRecu, Travel::class, 'json', ['groups' => 'travel:write']);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Invalid JSON data provided.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $errors = $validator->validate($travel);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getPropertyPath() . ': ' . $error->getMessage();
+            }
+            return new JsonResponse(['errors' => $errorMessages], Response::HTTP_BAD_REQUEST);
+        }
+
+        $entityManager->persist($travel);
+        $entityManager->flush();
+
+        $jsonTravel = $serializer->serialize($travel, 'json', ['groups' => 'travel:read']);
+
+        return new JsonResponse($jsonTravel, Response::HTTP_CREATED, [], true);
+    }
+
+
+    #[Route('/api/travels/{id}', name: 'api_travel_edit', methods: ['PUT'])]
+    public function apiEdit(Request $request, Travel $travel, SerializerInterface $serializer, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
+    {
+        $jsonRecu = $request->getContent();
+
+        try {
+            $serializer->deserialize($jsonRecu, Travel::class, 'json', [
+                'groups' => 'travel:write',
+                'object_to_populate' => $travel
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Invalid JSON data provided.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $errors = $validator->validate($travel);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getPropertyPath() . ': ' . $error->getMessage();
+            }
+            return new JsonResponse(['errors' => $errorMessages], Response::HTTP_BAD_REQUEST);
+        }
+
+        $entityManager->flush();
+
+        $jsonTravel = $serializer->serialize($travel, 'json', ['groups' => 'travel:read']);
+
+        return new JsonResponse($jsonTravel, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/api/travels/{id}', name: 'api_travel_delete', methods: ['DELETE'])]
+    public function apiDelete(Travel $travel, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $entityManager->remove($travel);
+        $entityManager->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }
