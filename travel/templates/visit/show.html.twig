@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Visit{% endblock %}
+
+{% block body %}
+    <h1>Visit</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ visit.id }}</td>
+            </tr>
+            <tr>
+                <th>Photo</th>
+                <td>{{ visit.photo }}</td>
+            </tr>
+            <tr>
+                <th>Country</th>
+                <td>{{ visit.country }}</td>
+            </tr>
+            <tr>
+                <th>Location</th>
+                <td>{{ visit.location }}</td>
+            </tr>
+            <tr>
+                <th>VisitDate</th>
+                <td>{{ visit.visitDate ? visit.visitDate|date('Y-m-d') : '' }}</td>
+            </tr>
+            <tr>
+                <th>StartTime</th>
+                <td>{{ visit.startTime ? visit.startTime|date('H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Duration</th>
+                <td>{{ visit.duration }}</td>
+            </tr>
+            <tr>
+                <th>EndTime</th>
+                <td>{{ visit.endTime ? visit.endTime|date('H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Comment</th>
+                <td>{{ visit.comment }}</td>
+            </tr>
+            <tr>
+                <th>CreatedAt</th>
+                <td>{{ visit.createdAt ? visit.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>IsCompleted</th>
+                <td>{{ visit.isCompleted ? 'Yes' : 'No' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_visit_index') }}">back to list</a>
+
+    <a href="{{ path('app_visit_edit', {'id': visit.id}) }}">edit</a>
+
+    {{ include('visit/_delete_form.html.twig') }}
+{% endblock %}

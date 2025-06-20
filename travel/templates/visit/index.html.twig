@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Visit index{% endblock %}
+
+{% block body %}
+    <h1>Visit index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Photo</th>
+                <th>Country</th>
+                <th>Location</th>
+                <th>VisitDate</th>
+                <th>StartTime</th>
+                <th>Duration</th>
+                <th>EndTime</th>
+                <th>Comment</th>
+                <th>CreatedAt</th>
+                <th>IsCompleted</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for visit in visits %}
+            <tr>
+                <td>{{ visit.id }}</td>
+                <td>{{ visit.photo }}</td>
+                <td>{{ visit.country }}</td>
+                <td>{{ visit.location }}</td>
+                <td>{{ visit.visitDate ? visit.visitDate|date('Y-m-d') : '' }}</td>
+                <td>{{ visit.startTime ? visit.startTime|date('H:i:s') : '' }}</td>
+                <td>{{ visit.duration }}</td>
+                <td>{{ visit.endTime ? visit.endTime|date('H:i:s') : '' }}</td>
+                <td>{{ visit.comment }}</td>
+                <td>{{ visit.createdAt ? visit.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ visit.isCompleted ? 'Yes' : 'No' }}</td>
+                <td>
+                    <a href="{{ path('app_visit_show', {'id': visit.id}) }}">show</a>
+                    <a href="{{ path('app_visit_edit', {'id': visit.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="12">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_visit_new') }}">Create new</a>
+{% endblock %}
