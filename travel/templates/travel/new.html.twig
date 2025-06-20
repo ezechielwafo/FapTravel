@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un nouveau voyage{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Créer un nouveau voyage</h1>
+
+    {# Affiche le formulaire #}
+    {{ form_start(travelForm) }} {# Ouvre la balise <form> #}
+
+        
+    {{ form_start(travelForm, {'attr': {'data-turbo': 'false'}}) }}
+
+        {{ form_widget(travelForm) }}
+
+        {# Ajoute un bouton d'envoi manuel #}
+        <button type="submit" class="btn btn-primary mt-3">Créer le voyage</button>
+
+    {{ form_end(travelForm) }} {# Ferme la balise </form> #}
+    
+    {# Liens d'action (Modifier, Supprimer) - à implémenter plus tard #}
+    <a href="#" class="btn btn-secondary">Modifier</a>
+    <a href="#" class="btn btn-danger">Supprimer</a>
+
+
+    <p class="mt-3"><a href="{{ path('app_travel_index') }}">Retour à la liste des voyages</a></p>
+
+</div>
+{% endblock %}

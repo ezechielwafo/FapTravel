@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Voyages{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Liste des Voyages</h1>
+
+    {% if travels is empty %}
+        <p>Aucun voyage n'a été trouvé pour le moment.</p>
+    {% else %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Date de début</th>
+                    <th>Date de fin</th>
+                    <th>Prix</th>
+                    <th>Actions</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {% for travel in travels %}
+                    <tr>
+                        <td><a href="{{ path('app_travel_show', {'id': travel.id}) }}">{{ travel.name }}</a></td> 
+                        <td>{{ travel.startDate ? travel.startDate|date('Y-m-d') : '' }}</td> {# Formatage de la date #}
+                        <td>{{ travel.endDate ? travel.endDate|date('Y-m-d') : '' }}</td>   {# Formatage de la date #}
+                        <td>{{ travel.price ? travel.price ~ ' €' : 'N/A' }}</td> {# Affichage du prix #}
+                        <td>
+                            {# Ici, tu ajouteras plus tard des liens vers les pages de détail, modification, suppression #}
+                            <a href="#">Voir</a> | <a href="#">Modifier</a> | <a href="#">Supprimer</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+   
+<p class="mt-3"><a href="{{ path('app_travel_new') }}" class="btn btn-success">
+Ajouter un nouveau voyage</a></p>
+
+</div>
+{% endblock %}
