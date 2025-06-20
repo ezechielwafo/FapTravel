@@ -2,12 +2,12 @@
 
 namespace App\Controller;
 
-use App\Entity\Travel; // Importe l'entité Travel
-use App\Form\TravelType; // Importe le formulaire TravelType
+use App\Entity\Travel;
+use App\Form\TravelType;
 use App\Repository\TravelRepository;
-use Doctrine\ORM\EntityManagerInterface; // Importe l'EntityManager
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request; // Importe Request
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -23,18 +23,16 @@ class TravelController extends AbstractController
         ]);
     }
 
-    #[Route('/travel/new', name: 'app_travel_new')] // Nouvelle route pour l'ajout
-    public function new(Request $request, EntityManagerInterface $entityManager): Response // Injecte Request et EntityManager
+    #[Route('/travel/new', name: 'app_travel_new')]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
-        $travel = new Travel(); // Crée une nouvelle instance de l'entité Travel
-        $form = $this->createForm(TravelType::class, $travel); // Crée le formulaire lié à l'entité
-
-        $form->handleRequest($request); // Gère la soumission du formulaire
+        $travel = new Travel();
+        $form = $this->createForm(TravelType::class, $travel);
+        $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
-            $entityManager->persist($travel); // Prépare l'objet $travel à être sauvegardé
-            $entityManager->flush(); // Exécute la sauvegarde en base de données
+            $entityManager->persist($travel);
+            $entityManager->flush();
 
             $this->addFlash('success', 'Le voyage a été créé avec succès !');
 
@@ -42,17 +40,51 @@ class TravelController extends AbstractController
         }
 
         return $this->render('travel/new.html.twig', [
-            'travelForm' => $form->createView(), 
+            'travelForm' => $form->createView(),
         ]);
-    
     }
-         #[Route('/travel/{id}', name: 'app_travel_show')] // Nouvelle route avec un paramètre {id}
-    public function show(Travel $travel): Response // Symfony convertit automatiquement l'ID en objet Travel
-    {
-        // L'objet $travel est automatiquement récupéré par Symfony grâce au paramètre {id} et au type hinting Travel
 
+    #[Route('/travel/{id}', name: 'app_travel_show')]
+    public function show(Travel $travel): Response
+    {
         return $this->render('travel/show.html.twig', [
-            'travel' => $travel, // Passe l'objet Travel au template
+            'travel' => $travel,
         ]);
+    }
+
+    #[Route('/travel/{id}/edit', name: 'app_travel_edit')] // <-- AJOUTE CETTE ACTION
+    public function edit(Request $request, Travel $travel, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(TravelType::class, $travel);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Le voyage a été modifié avec succès !');
+
+            return $this->redirectToRoute('app_travel_show', ['id' => $travel->getId()]);
+        }
+
+        return $this->render('travel/edit.html.twig', [
+            'travelForm' => $form->createView(),
+            'travel' => $travel,
+        ]);
+    }
+
+
+    #[Route('/travel/{id}', name: 'app_travel_delete', methods: ['POST'])]
+    public function delete(Request $request, Travel $travel, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete' . $travel->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($travel);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Le voyage a été supprimé avec succès !');
+        } else {
+             $this->addFlash('danger', 'Impossible de supprimer le voyage (token CSRF invalide).');
+        }
+
+        return $this->redirectToRoute('app_travel_index');
     }
 }

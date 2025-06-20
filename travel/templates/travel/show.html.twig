@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %} {# Indique que ce template hérite du layout de base #}
+
+{% block title %}Détails du voyage : {{ travel.name }}{% endblock %} {# Définit le titre de la page en utilisant le nom du voyage #}
+
+{% block body %} {# Démarre le bloc principal du contenu #}
+<div class="container mt-4"> {# Utilise une classe Bootstrap pour le conteneur #}
+
+    <h1>Détails du voyage : {{ travel.name }}</h1> {# Titre principal de la page #}
+
+    {# Affiche les détails du voyage dans une table ou une liste #}
+    <table class="table table-bordered mt-3"> {# Utilise des classes Bootstrap pour la table #}
+        <tbody>
+            <tr>
+                <th>ID</th>
+                <td>{{ travel.id }}</td> {# Affiche l'ID du voyage #}
+            </tr>
+            <tr>
+                <th>Nom</th>
+                <td>{{ travel.name }}</td> {# Affiche le nom du voyage #}
+            </tr>
+            <tr>
+                <th>Description</th>
+                <td>{{ travel.description|nl2br }}</td> {# Affiche la description, nl2br convertit les sauts de ligne en balises <br> #}
+            </tr>
+            <tr>
+                <th>Date de début</th>
+                <td>{{ travel.startDate ? travel.startDate|date('Y-m-d') : 'Non spécifiée' }}</td> {# Affiche la date de début, formatée, ou un message si non définie #}
+            </tr>
+            <tr>
+                <th>Date de fin</th>
+                <td>{{ travel.endDate ? travel.endDate|date('Y-m-d') : 'Non spécifiée' }}</td> {# Affiche la date de fin, formatée, ou un message si non définie #}
+            </tr>
+            <tr>
+                <th>Prix</th>
+                <td>{{ travel.price ? travel.price ~ ' €' : 'Non spécifié' }}</td> {# Affiche le prix avec le symbole €, ou un message si non défini #}
+            </tr>
+            {# Tu peux ajouter d'autres champs ici si ton entité Travel en a #}
+        </tbody>
+    </table>
+
+    {# Liens d'action (Modifier, Supprimer) #}
+    <div class="mt-3"> {# Ajoute une marge au-dessus des boutons #}
+        {# Lien vers la page de modification #}
+        <a href="{{ path('app_travel_edit', {'id': travel.id}) }}" class="btn btn-secondary">Modifier</a>
+
+        {# Formulaire pour la suppression (utilise POST et CSRF) #}
+        <form method="post" action="{{ path('app_travel_delete', {'id': travel.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce voyage ?');" style="display: inline-block; margin-left: 10px;"> {# Ajoute une petite marge à gauche #}
+            {# Champ caché pour le token CSRF (sécurité) #}
+            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ travel.id) }}">
+            {# Bouton de soumission du formulaire de suppression #}
+            <button type="submit" class="btn btn-danger">Supprimer</button>
+        </form>
+    </div>
+
+
+    {# Lien pour retourner à la liste #}
+    <p class="mt-3"><a href="{{ path('app_travel_index') }}">Retour à la liste des voyages</a></p>
+
+</div>
+{% endblock %} {# Termine le bloc principal du contenu #}
