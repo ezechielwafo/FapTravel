@@ -1,44 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, ActivityIndicator } from 'react-native';
-// Assure-toi que le chemin d'accès est correct pour ton projet
-// Si VisitesScreen est dans screens/VisitesScreen.js, le chemin est :
-import VisitesScreen from '../../screens/VisitesScreen';
+import axios from 'axios'; // Importe axios
 
-// Si tu veux mettre le contenu directement ici pour tester, tu peux le faire :
-/*
-const VisitesScreenContent = () => {
-  const [visites, setVisites] = useState([]);
-  const [loading, setLoading] = useState(true);
+// --- MODIFICATION 1 : Ajuster l'URL ---
+// L'URL de ton API Symfony. Assure-toi que ton serveur Symfony tourne
+// et que tu peux y accéder depuis ton téléphone.
+
+// CHOISIS L'UNE DES DEUX LIGNES CI-DESSOUS, SELON TON ENVIRONNEMENT :
+
+// Si tu utilises un ÉMULATEUR ANDROID :
+// const API_URL = 'http://10.0.2.2:8000/api/travels';
+
+// Si tu utilises un SIMULATEUR IOS ou un APPAREIL PHYSIQUE sur le même Wi-Fi :
+// (Utilise l'adresse IP de ton PC sur ton réseau local, par exemple 172.20.203.138)
+const API_URL = 'http://localhost:8000/api/travels'; // <-- Assure-toi que c'est la bonne IP de ton PC
+
+export default function TabIndex() {
+  const [travels, setTravels] = useState([]);
+  const [loading, setLoading] = useState(true); // Remets loading à true pour afficher l'indicateur au début
   const [error, setError] = useState(null);
 
-  const fetchVisites = async () => {
+  const fetchTravels = async () => {
     setLoading(true);
     setError(null);
     try {
-      setTimeout(() => {
-        setVisites([
-          { id: '1', nom: 'Tour Eiffel', ville: 'Paris' },
-          { id: '2', nom: 'Colisée', ville: 'Rome' },
-          { id: '3', nom: 'Statue de la Liberté', ville: 'New York' },
-        ]);
-        setLoading(false);
-      }, 1500);
+      const response = await axios.get(API_URL);
+      setTravels(response.data);
+      setLoading(false);
     } catch (err) {
-      setError("Erreur lors du chargement des visites.");
-      console.error("Erreur fetchVisites:", err);
+      setError(`Erreur lors de la récupération des voyages: ${err.message}`);
+      console.error("Erreur axios fetchTravels:", err);
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchVisites();
+    fetchTravels(); // Appelle la fonction renommée
   }, []);
+  // !!! SUPPRIME CE DEUXIÈME useEffect !!!
+  /*
+  useEffect(() => {
+    setTravels([
+      { id: 1, name: 'Voyage Test 1', description: 'Description test 1' },
+      { id: 2, name: 'Voyage Test 2', description: 'Description test 2' },
+    ]);
+  }, []);
+  */
 
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Chargement des visites...</Text>
+        <Text>Chargement des voyages...</Text>
       </View>
     );
   }
@@ -53,30 +66,31 @@ const VisitesScreenContent = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Nos Visites</Text>
-      {visites.length === 0 ? (
-        <Text style={styles.centered}>Aucune visite trouvée.</Text>
+      <Text style={styles.header}>Nos Voyages</Text>
+      {travels.length === 0 ? (
+        <Text style={styles.centered}>Aucun voyage trouvé.</Text>
       ) : (
         <FlatList
-          data={visites}
-          keyExtractor={(item) => item.id}
+          data={travels}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.visiteItem}>
-              <Text style={styles.visiteNom}>{item.nom}</Text>
-              <Text style={styles.visiteVille}>{item.ville}</Text>
+              <Text style={styles.visiteNom}>{item.name}</Text>
+              <Text style={styles.visiteVille}>{item.description}</Text>
             </View>
           )}
         />
       )}
     </View>
   );
-};
+}
 
-// Styles pour le contenu de VisitesScreen
+// Styles (restent les mêmes)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 15,
+    backgroundColor: '#fff',
   },
   centered: {
     flex: 1,
@@ -109,33 +123,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginTop: 5,
-  },
-});
-
-export default VisitesScreenContent;
-*/
-
-// Si tu as bien créé le fichier screens/VisitesScreen.js avec le code précédent,
-// utilise cet import et affiche le composant :
-export default function TabIndex() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>TravelParadise</Text>
-      <VisitesScreen />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: 50, // Espace en haut pour la barre d'état
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
   },
 });
