@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Bienvenue sur votre tableau de bord !</h1>
+
+    <p>C'est ici que vous pourrez voir les services et fonctionnalités de l'application.</p>
+
+     {% if user %}
+        <p>Bonjour, {{ user.firstName }} !</p>
+    {% endif %} 
+
+    <p><a href="{{ path('app_logout') }}">Se déconnecter</a></p> {# Ajoute un lien de déconnexion #}
+
+</div>
+{% endblock %}

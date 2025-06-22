@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Voyages{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Liste des Voyages</h1>
+
+    {% if travels is empty %}
+        <p>Aucun voyage n'a été trouvé pour le moment.</p>
+    {% else %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Date de début</th>
+                    <th>Date de fin</th>
+                    <th>Prix</th>
+                    <th>Actions</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {% for travel in travels %}
+                    <tr>
+                        <td>{{ travel.name }}</a></td> 
+                        <td>{{ travel.startDate ? travel.startDate|date('Y-m-d') : '' }}</td> {# Formatage de la date #}
+                        <td>{{ travel.endDate ? travel.endDate|date('Y-m-d') : '' }}</td>   {# Formatage de la date #}
+                        <td>{{ travel.price ? travel.price ~ ' €' : 'N/A' }}</td> {# Affichage du prix #}
+                        <td>
+                            
+                           <a href="{{ path('app_travel_show', {'id': travel.id}) }}">voir</a> | 
+                           <a href="{{ path('app_travel_edit', {'id': travel.id}) }}" class="btn btn-secondary">Modifier</a> | 
+                             <form method="post" action="{{ path('app_travel_delete', {'id': travel.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce voyage ?');" style="display: inline-block; margin-left: 10px;"> {# Ajoute une petite marge à gauche #}
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ travel.id) }}">
+                                <a href='' type="submit" class="btn btn-danger">Supprimers</a>
+                             </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+   
+<p class="mt-3"><a href="{{ path('app_travel_new') }}" class="btn btn-success">
+Ajouter un nouveau voyage</a></p>
+
+</div>
+{% endblock %}
