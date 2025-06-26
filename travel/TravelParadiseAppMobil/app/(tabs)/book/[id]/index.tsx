@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Image, TextInput, Button, Alert } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router'; // Importe useRouter
 import axios from 'axios';
 
 // Réutilise la même interface Travel pour la cohérence
@@ -10,12 +10,13 @@ interface Travel {
     description: string;
     imageUrl?: string;
     location?: string;
-    price?: number;
+    price?: number; // Assure-toi que le prix est bien un nombre
     duration?: string;
 }
 
 export default function BookTravelScreen() {
     const { id } = useLocalSearchParams();
+    const router = useRouter(); // Pour la navigation
     const [travel, setTravel] = useState<Travel | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export default function BookTravelScreen() {
     const [numberOfPeople, setNumberOfPeople] = useState<string>('1');
     const [contactName, setContactName] = useState<string>('');
     const [contactEmail, setContactEmail] = useState<string>('');
+    const [bookingError, setBookingError] = useState<string | null>(null); // Pour les erreurs de réservation
 
     useEffect(() => {
         const fetchTravelDetails = async () => {
@@ -35,7 +37,13 @@ export default function BookTravelScreen() {
                 setTravel(response.data);
             } catch (err) {
                 console.error("Erreur lors de la récupération des détails du voyage pour la réservation:", err);
-                setError("Impossible de charger les détails du voyage.");
+                if (err.response) {
+                    setError(`Erreur ${err.response.status}: ${err.response.data.message || 'Impossible de charger les détails du voyage.'}`);
+                } else if (err.request) {
+                    setError("Pas de réponse du serveur. Vérifiez que le backend tourne.");
+                } else {
+                    setError("Erreur lors de la configuration de la requête.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -49,31 +57,73 @@ export default function BookTravelScreen() {
         }
     }, [id]);
 
-    const handleBooking = () => {
+    // Calcul du prix total
+    const calculateTotalPrice = () => {
+        const numPeople = parseInt(numberOfPeople, 10);
+        if (travel && travel.price !== undefined && !isNaN(numPeople) && numPeople > 0) {
+            return travel.price * numPeople;
+        }
+        return 0;
+    };
+
+    const handleBooking = async () => { // Rendre la fonction asynchrone
         // Validation simple des champs
         if (!contactName || !contactEmail || !numberOfPeople) {
-            Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+            setBookingError("Veuillez remplir tous les champs.");
             return;
         }
-        if (isNaN(parseInt(numberOfPeople)) || parseInt(numberOfPeople) <= 0) {
-            Alert.alert("Erreur", "Le nombre de personnes doit être un nombre valide.");
+        const numPeople = parseInt(numberOfPeople, 10);
+        if (isNaN(numPeople) || numPeople <= 0) {
+            setBookingError("Le nombre de personnes doit être un nombre valide et supérieur à 0.");
+            return;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(contactEmail)) {
+            setBookingError("Veuillez entrer une adresse email valide.");
             return;
         }
         if (!travel) {
-            Alert.alert("Erreur", "Aucun détail de voyage disponible.");
+            setBookingError("Aucun détail de voyage disponible.");
             return;
         }
 
-        // Ici, tu ferais un appel à une API pour enregistrer la réservation
-        // Pour l'instant, on affiche juste une alerte de succès
-        Alert.alert(
-            "Réservation réussie !",
-            `Votre réservation pour "${travel.name}" est confirmée.\nNom: ${contactName}\nEmail: ${contactEmail}\nPersonnes: ${numberOfPeople}`,
-            [{ text: "OK" }]
-        );
+        setBookingError(''); // Réinitialise l'erreur de réservation
 
-        // Optionnellement, tu peux naviguer vers un écran de confirmation ou revenir à la liste
-        // router.push('/confirmation'); // Si tu as un écran de confirmation
+        // Préparation des données pour l'API
+        const reservationData = {
+            travelId: parseInt(id as string), // Assure-toi que c'est un nombre
+            fullName: contactName,
+            email: contactEmail,
+            numberOfPeople: numPeople,
+        };
+
+        try {
+            // Appel à l'API Symfony pour créer la réservation
+            const response = await axios.post('http://localhost:8000/api/reservations', reservationData);
+
+            if (response.data.success) {
+                Alert.alert("Succès", response.data.message);
+                // Réinitialiser le formulaire
+                setContactName('');
+                setContactEmail('');
+                setNumberOfPeople('1');
+                // Rediriger vers une page de confirmation ou la liste des voyages
+                router.push('/(tabs)/home'); // Exemple de redirection
+            } else {
+                // Si le backend renvoie une erreur spécifique dans le JSON
+                setBookingError(response.data.message || "Une erreur est survenue lors de la réservation.");
+            }
+        } catch (err) {
+            console.error("Erreur lors de l'envoi de la réservation:", err);
+            if (err.response && err.response.data && err.response.data.message) {
+                setBookingError(err.response.data.message);
+            } else if (err.response && err.response.data && err.response.data.errors) {
+                // Si le backend renvoie un tableau d'erreurs de validation
+                setBookingError(err.response.data.errors.join('\n'));
+            } else {
+                setBookingError("Erreur de connexion au serveur. Veuillez réessayer.");
+            }
+        }
     };
 
     if (loading) {
@@ -89,6 +139,8 @@ export default function BookTravelScreen() {
         return (
             <View style={styles.centered}>
                 <Text style={styles.errorText}>{error}</Text>
+                {/* Optionnel : ajouter un bouton pour réessayer */}
+                <Button title="Réessayer" onPress={() => { /* Logique pour réessayer */ }} />
             </View>
         );
     }
@@ -117,6 +169,12 @@ export default function BookTravelScreen() {
                     <Text style={styles.value}>{travel.price} €</Text>
                 </View>
             )}
+
+            {/* Affichage du prix total calculé */}
+            <View style={styles.detailRow}>
+                <Text style={styles.label}>Prix total :</Text>
+                <Text style={styles.value}>{calculateTotalPrice()} €</Text>
+            </View>
 
             <View style={styles.formContainer}>
                 <Text style={styles.formTitle}>Vos informations</Text>
@@ -148,10 +206,14 @@ export default function BookTravelScreen() {
                     keyboardType="numeric"
                 />
 
+                {/* Affichage des erreurs de réservation */}
+                {bookingError ? <Text style={styles.errorText}>{bookingError}</Text> : null}
+
                 <Button
                     title="Confirmer la réservation"
                     onPress={handleBooking}
                     color="#007AFF"
+                    disabled={loading} // Désactive le bouton pendant le chargement ou l'envoi
                 />
             </View>
         </View>
@@ -172,13 +234,13 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 150, // Légèrement plus petit pour laisser place au formulaire
+        height: 150,
         borderRadius: 8,
         marginBottom: 15,
         resizeMode: 'cover',
     },
     title: {
-        fontSize: 22, // Un peu plus petit que sur la page de détail
+        fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 15,
         color: '#333',
@@ -193,7 +255,7 @@ const styles = StyleSheet.create({
     detailRow: {
         flexDirection: 'row',
         marginBottom: 10,
-        justifyContent: 'space-between', // Pour aligner prix à droite
+        justifyContent: 'space-between',
     },
     label: {
         fontSize: 16,
@@ -207,6 +269,8 @@ const styles = StyleSheet.create({
     errorText: {
         color: 'red',
         fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 10,
     },
     formContainer: {
         marginTop: 20,
